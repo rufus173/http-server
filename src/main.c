@@ -83,4 +83,13 @@ void serve_connection(int client,struct sockaddr_in client_addr,socklen_t client
 			return;
 		}
 		printf("ip: %s\n",client_ip);
+		//=============== receive and deconstruct request =========
+		char *request = NULL;
+		int request_length = recvall(client,&request);
+		if (request < 0){
+			ERROR("could not receive request");
+			return;
+		}
+		printf("request:[%s]\n",request);
+		free(request);
 }

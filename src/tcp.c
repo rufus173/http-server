@@ -1,4 +1,5 @@
 #include <sys/socket.h>
+#include <string.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,4 +19,31 @@ int create_socket(){
 		return -1;
 	}
 	return sockfd;
+}
+int recvall(int sock,char **return_buffer){
+	//for realloc to work
+	return_buffer[0] = NULL;
+
+	int return_buffer_length = 0;
+	for (;;){
+		//receive data
+		char recv_buffer[5];
+		int recv_buffer_length = recv(sock,recv_buffer,sizeof(recv_buffer),0);
+		
+		//realloc return buffer and fill it
+		*return_buffer = realloc(return_buffer[0],return_buffer_length+recv_buffer_length);
+		if (return_buffer == NULL){
+			ERROR("realloc failed");
+			perror("realloc");
+			return -1;
+		}
+		char *return_buffer_end = *return_buffer+return_buffer_length;
+		memcpy(return_buffer_end,recv_buffer,recv_buffer_length);
+		return_buffer_length += recv_buffer_length;
+		printf("%s\n",*return_buffer);
+		if (strncmp(*return_buffer+return_buffer_length-4,"\r\n\r\n",4) == 0){//end of message
+			break;
+		}
+	}
+	return return_buffer_length;
 }
